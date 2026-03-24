@@ -5,10 +5,11 @@
 
 
 void cbuild_self_compile(cbuild_runner *runner,const char* filepath) {
+#ifdef _WIN32
     uint64_t current = readTimeStamp("blob.bin");
     uint64_t updated = hasFileBeenUpdated(filepath);
     if(current != updated) {
-        const char cmd[50];
+        const char cmd[502];
         cbuild_rename_file("output.exe", "output.old.exe");
         strcat(cmd,runner->compiler);
         strcat(cmd," ");
@@ -17,9 +18,10 @@ void cbuild_self_compile(cbuild_runner *runner,const char* filepath) {
         strcat(cmd, " -o output.exe");
         cbuild_run_command(cmd);
         writeTimeStamp("blob.bin", updated);
-        printf("Self-compilation failed\n");
+        printf("output.exe -> output.old.exe\n");
         exit(1);
     }
+#endif
 }
 
 int cbuild_run_command(const char *command) {
@@ -40,7 +42,7 @@ int cbuild_rename_file(const char *old_path, const char *new_path) {
 int cbuild_runner_init(cbuild_runner *runner,const char * compiler)
 {
     runner->compiler = compiler;
-    strcat(runner->output, runner->compiler);
+    strcpy(runner->output, runner->compiler);
     strcat(runner->output, " ");
     return 0;
 }

@@ -1,6 +1,8 @@
 #ifndef CBUILD_H
 #define CBUILD_H
 
+
+
 #include <windows.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -13,7 +15,7 @@
 
 typedef struct {
     const char *compiler;
-    const char output[500];
+    char output[500];
     int success;
 } cbuild_runner;
 
