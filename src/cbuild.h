@@ -10,7 +10,8 @@
 #include <string.h> // Required for string manipulation
 
 #define GCC "gcc"
-#define CLANG "CLANG"
+#define MSVC "cl"
+#define CLANG "clang"
 #define DEBUGFLAG "-g"
 
 typedef struct {
