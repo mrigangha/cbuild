@@ -9,11 +9,12 @@ void cbuild_self_compile(cbuild_runner *runner,const char* filepath) {
     uint64_t updated = hasFileBeenUpdated(filepath);
     if(current != updated) {
         const char cmd[50];
+        cbuild_rename_file("output.exe", "output.old.exe");
         strcat(cmd,runner->compiler);
         strcat(cmd," ");
         strcat(cmd, " src/**.c");
         strcat(cmd, " ");
-        strcat(cmd, " -o output1.exe");
+        strcat(cmd, " -o output.exe");
         cbuild_run_command(cmd);
         writeTimeStamp("blob.bin", updated);
         printf("Self-compilation failed\n");
@@ -26,10 +27,20 @@ int cbuild_run_command(const char *command) {
 }
 
 
+int cbuild_rename_file(const char *old_path, const char *new_path) {
+#ifdef _WIN32
+    if (!MoveFileEx(old_path, new_path, MOVEFILE_REPLACE_EXISTING)) {
+        printf("could not rename %s to %s: %s\n", old_path, new_path);
+        return 0;
+    }
+    return 1;
+#endif
+}
+
 int cbuild_runner_init(cbuild_runner *runner,const char * compiler)
 {
     runner->compiler = compiler;
-    strcat(runner->output, compiler);
+    strcat(runner->output, runner->compiler);
     strcat(runner->output, " ");
     return 0;
 }
@@ -64,11 +75,13 @@ int cbuild_build(cbuild_runner * runner)
 }
 
 
+#if defined(_WIN32)
 uint64_t SerializeFileTime(const FILETIME* ft) {
     return ((uint64_t)ft->dwHighDateTime << 32) | (uint64_t)ft->dwLowDateTime;
 }
-
+#endif
 int hasFileBeenUpdated(const char *filepath) {
+#if defined(_WIN32)
     WIN32_FILE_ATTRIBUTE_DATA info;
 
     if (!GetFileAttributesExA(filepath, GetFileExInfoStandard, &info)) {
@@ -80,6 +93,7 @@ int hasFileBeenUpdated(const char *filepath) {
 
     // Compare with last known write time
     return SerializeFileTime(&lastTime);
+#endif
 }
 
 
@@ -104,6 +118,7 @@ void writeTimeStamp(const char *filepath, uint64_t original_number) {
 }
 
 uint64_t readTimeStamp(const char *filepath) {
+#if defined(_WIN32)
     uint64_t read_number = 0;
     FILE* file_ptr = fopen(filepath, "rb");
     if (file_ptr == NULL) {
@@ -112,4 +127,5 @@ uint64_t readTimeStamp(const char *filepath) {
     fread(&read_number, sizeof(uint64_t), 1, file_ptr);
     fclose(file_ptr);
     return read_number;
+#endif
 }
