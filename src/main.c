@@ -1,3 +1,4 @@
+#define CBUILD_INCLUDE_IMPL
 #include "cbuild.h"
 
 
