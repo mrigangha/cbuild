@@ -1,6 +1,6 @@
 A Package Manager ,Some Libs and Build Tool for c
 
-`` 
+```c
 #define CBUILD_INCLUDE_IMPL
 #include "cbuild.h"
 
