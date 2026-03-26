@@ -1,7 +1,6 @@
 #define CBUILD_INCLUDE_IMPL
 #include "cbuild.h"
 
-
 int main(int argc, char *argv[]) {
 
     cbuild_runner runner;

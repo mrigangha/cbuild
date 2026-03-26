@@ -4,6 +4,6 @@
 
 void main()
 {
-    LOG("HEllo From log");
-    printf("Hello World!!!!");
+    LOG("HEllo From log1");
+    printf("Hello World 2026!");
 }
