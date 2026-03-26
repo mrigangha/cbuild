@@ -1,6 +1,6 @@
 SOURCE=src/**.c
 TARGET=x86_64-w64-windows-gnu
-FLAGS=-g
+FLAGS=-g -Wall
 OUTPUT=output.exe
 
 

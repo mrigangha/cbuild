@@ -22,18 +22,31 @@ typedef struct {
 } cbuild_runner;
 
 
+typedef struct {
+    char file[500];
+} cbuild_file;
+
+typedef struct {
+    cbuild_file *list;
+    int count;
+} dynamic_list;
+
+
+
 int cbuild_run_command(const char *command);
 
 void cbuild_self_compile(cbuild_runner *runner,const char* filepath);
 int cbuild_runner_init(cbuild_runner *runner,const char * compiler);
 int cbuild_append(cbuild_runner *runner,...);
+int cbuild_append_source(cbuild_runner *runner,...);
 int cbuild_configure(cbuild_runner *runner);
 int cbuild_build(cbuild_runner *runner);
 int cbuild_rename_file(const char *old_path, const char *new_path);
-uint64_t readTimeStamp(const char *filepath);
-void writeTimeStamp(const char *filepath, uint64_t original_number);
 int hasFileBeenUpdated(const char *filepath);
 uint64_t SerializeFileTime(const FILETIME* ft);
+
+void track_cfile(const char *filepath);
+
 #endif // CBUILD_H
 
 #ifdef CBUILD_INCLUDE_IMPL
@@ -43,9 +56,10 @@ uint64_t SerializeFileTime(const FILETIME* ft);
 
 void cbuild_self_compile(cbuild_runner *runner,const char* filepath) {
 #ifdef _WIN32
-    uint64_t current = readTimeStamp("blob.bin");
+    //uint64_t current = readTimeStamp("blob.bin");
+    uint64_t current = hasFileBeenUpdated("output.exe");
     uint64_t updated = hasFileBeenUpdated(filepath);
-    if(current != updated) {
+    if(current < updated) {
         const char cmd[502];
         cbuild_rename_file("output.exe", "output.old.exe");
         strcat(cmd,runner->compiler);
@@ -54,7 +68,6 @@ void cbuild_self_compile(cbuild_runner *runner,const char* filepath) {
         strcat(cmd, " ");
         strcat(cmd, " -o output.exe");
         cbuild_run_command(cmd);
-        writeTimeStamp("blob.bin", updated);
         printf("output.exe -> output.old.exe\n");
         exit(1);
     }
@@ -78,6 +91,7 @@ int cbuild_rename_file(const char *old_path, const char *new_path) {
 
 int cbuild_runner_init(cbuild_runner *runner,const char * compiler)
 {
+    runner->success=0;
     runner->compiler = compiler;
     strcpy(runner->output, runner->compiler);
     strcat(runner->output, " ");
@@ -91,8 +105,33 @@ int cbuild_append(cbuild_runner *runner,...)
 
     const char *arg;
     while ((arg = va_arg(ap, const char *)) != NULL) {
-        strcat(runner->output, arg);
-        strcat(runner->output, " ");
+        if (arg[strlen(arg)-1]=='c' && arg[strlen(arg)-2] == '.')
+        {
+            char builder[100] = "";
+            char output_obj[50]="";
+            strcat(output_obj, arg);
+            strcat(output_obj, ".o");
+            uint64_t fileTime = hasFileBeenUpdated(arg);
+            uint64_t binaryTime=hasFileBeenUpdated(output_obj);
+            if(fileTime>binaryTime)
+            {
+                runner->success=1;
+                strcat(builder, "gcc -c ");
+                strcat(builder, arg);
+                strcat(builder, " -o ");
+                strcat(builder, output_obj);
+                cbuild_run_command(builder);
+            }
+            printf("%s\n", builder);
+            strcat(runner->output, output_obj);
+            strcat(runner->output, " ");
+
+        }
+        else{
+            strcat(runner->output,arg);
+            strcat(runner->output, " ");
+        }
+
     }
 
     va_end(ap);
@@ -108,8 +147,14 @@ int cbuild_configure(cbuild_runner *runner)
 
 int cbuild_build(cbuild_runner * runner)
 {
-    printf("%s\n", runner->output);
-    system(runner->output);
+    if(runner->success==0)
+    {
+        printf("Nothing to Build No file Updated");
+    }
+    else{
+        printf("%s\n", runner->output);
+        cbuild_run_command(runner->output);
+    }
     return 0;
 }
 
@@ -136,37 +181,5 @@ int hasFileBeenUpdated(const char *filepath) {
 }
 
 
-void writeTimeStamp(const char *filepath, uint64_t original_number) {
-    FILE *file_ptr;
-
-        // --- Writing the integer to a binary file ---
-        // Open file in binary write mode ("wb")
-    file_ptr = fopen(filepath, "wb");
-    if (file_ptr == NULL) {
-        perror("Error opening file for writing");
-        return;
-    }
-
-    // Write the integer's raw binary data to the file
-    // fwrite(pointer_to_data, size_of_each_item, number_of_items, file_pointer)
-    fwrite(&original_number, sizeof(uint64_t), 1, file_ptr);
-
-
-    // Close the file after writing
-    fclose(file_ptr);
-}
-
-uint64_t readTimeStamp(const char *filepath) {
-#if defined(_WIN32)
-    uint64_t read_number = 0;
-    FILE* file_ptr = fopen(filepath, "rb");
-    if (file_ptr == NULL) {
-        return 0;  // ← 0 means "no cached value", not an error code
-    }
-    fread(&read_number, sizeof(uint64_t), 1, file_ptr);
-    fclose(file_ptr);
-    return read_number;
-#endif
-}
 
 #endif
