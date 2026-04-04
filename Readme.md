@@ -1,6 +1,6 @@
 # A Build system for c..
 
-Building C/C++ project must require only a c compiler.
+Building C/C++ project should require only a c compiler.
 
 ## Features.
 1. Use C to build a executable build files.
@@ -14,6 +14,7 @@ Building C/C++ project must require only a c compiler.
 ### Planned feature
 1. Parsing dependency and includes and autobuild everthing.
 
+## Demo program
 ```c
 #define CBUILD_INCLUDE_IMPL
 #include "cbuild.h"
