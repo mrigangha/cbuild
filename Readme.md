@@ -1,4 +1,18 @@
-A Package Manager ,Some Libs and Build Tool for c
+# A Build system for c..
+
+Building C/C++ project must require only a c compiler.
+
+## Features.
+1. Use C to build a executable build files.
+2. No dependency only c compiler.
+3. Auto builds itself.
+4. Concurrent builds using pthread pool
+## Hot to use..
+1. Include the cbuild.h header
+2. use #define CBUILD_INCLUDE_IMPL
+3. And use the cbuild_runner struct to create object and use it.
+### Planned feature
+1. Parsing dependency and includes and autobuild everthing.
 
 ```c
 #define CBUILD_INCLUDE_IMPL
